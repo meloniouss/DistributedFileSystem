@@ -1,6 +1,6 @@
 #include <string.h>
+#include <optional>
 #include "../include/nlohmann/json.hpp"
-
 
 enum class CommandType {
 	ADD_FILE,
@@ -15,9 +15,9 @@ enum class CommandType {
 
 struct Command {
 	CommandType cmdType;
-	std::string senderType; //node
-	std::string senderAddress; //ip
-	int senderPort;
+	std::optional<std::string> senderType; //node
+	std::optional<std::string> senderAddress; //ip
+	std::optional<int> senderPort;
 	nlohmann::json parameters;
 };
 
