@@ -22,6 +22,7 @@ nlohmann::json CommandParser::textToJson(std::string input){
     }
 
     return result;
+	//then use jsonToCommand on result !! this is only for the Client node (CLI node)
 }
 
 CommandType parseCommandType(const std::string &input){
