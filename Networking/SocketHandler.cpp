@@ -34,9 +34,13 @@ void SocketHandler::acceptConnection(){
 		acceptConnection();
 	});
 }
-void SocketHandler::sendData(Connection& conn, std::string& msg){
+
+//transforms command json string into length-prefixed data to be sent
+void SocketHandler::enqueueOutgoingMessage(Connection& conn, std::string& msg){
 	std::lock_guard<std::mutex> lock(conn.mtx);
-	conn.send_queue.push(msg);
+	std::ostringstream cleaned_data; cleaned_data << msg.size() << "\r" << msg;
+	std::string to_send = cleaned_data.str();
+	conn.send_queue.push(to_send);
 	if(conn.write_in_progress) return;
 	conn.write_in_progress = true;
 	doAsyncWrite(conn);
@@ -48,11 +52,11 @@ void SocketHandler::doAsyncWrite(Connection& conn){
 	//pop from queue, async::write what is inside the queue.
 }
 
-
 void SocketHandler::readData(Connection& currentConnection){
 	readHeader(currentConnection);
 }
 
+// network messages are length-prefixed
 void SocketHandler::readHeader(Connection& currentConnection){
 	asio::async_read_until(*currentConnection.socket, currentConnection.read_buffer, "\r", [this, &currentConnection](std::error_code ec, size_t bytes_transferred){
 		size_t data_length = 0;

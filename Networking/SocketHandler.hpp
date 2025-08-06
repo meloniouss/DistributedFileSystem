@@ -2,19 +2,17 @@
 #include "../include/asio.hpp"
 #include "../ThreadSafeQueue.hpp"
 class SocketHandler{
-
-struct Connection{
+public:
+	struct Connection{
 	std::shared_ptr<asio::ip::tcp::socket> socket;
 	asio::streambuf read_buffer;
 	ThreadSafeQueue<std::string> send_queue;	
 	bool write_in_progress = false;	
 	mutable std::mutex mtx;
 };
-
-public:
 	void startListenServer(int port);
 	void closeListenServer();
-	void sendData(Connection& conn, std::string& data);
+	void enqueueOutgoingMessage(Connection& conn, std::string& data);
 	void establishConnection(asio::ip::address ip_address, int port); // client side
 	void acceptConnection(); // server-side
 	void readData(Connection& currentConnection);
