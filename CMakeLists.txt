@@ -9,7 +9,6 @@ include_directories(include)
 # List your source files
 set(SOURCES
     CommandParsing/CommandParser.cpp
-    # add other .cpp files here as needed
 )
 
 add_executable(dfs ${SOURCES})

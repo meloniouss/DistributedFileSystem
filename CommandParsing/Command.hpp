@@ -1,6 +1,8 @@
+#pragma once
 #include <string.h>
 #include <optional>
 #include "../include/nlohmann/json.hpp"
+
 
 enum class CommandType {
 	ADD_FILE,
