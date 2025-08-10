@@ -1,11 +1,14 @@
 #include "Logger.hpp"
 #include <chrono>
 #include <iostream>
+#include <iomanip>
+#include <ctime>
 
 Logger::Logger(std::string nodetype) 
 :
 _nodetype(nodetype)
 {
+    std::cout << "Creating logger" << std::endl;
 }
 
 void Logger::Log(std::string msg){

@@ -1,4 +1,3 @@
-
 #include <iostream>
 #include <string>
 #include <istream>
@@ -7,8 +6,10 @@
 using asio::ip::tcp;
 
 void SocketHandler::startListenServer(int port){
-	acceptor_ = tcp::acceptor(io_context_, tcp::endpoint(tcp::v4(), port));
-	socket_ = tcp::socket(io_context_);
+  acceptor_.open(asio::ip::tcp::v4());
+    acceptor_.set_option(asio::ip::tcp::acceptor::reuse_address(true));
+    acceptor_.bind(asio::ip::tcp::endpoint(asio::ip::tcp::v4(), port));
+    acceptor_.listen();
 }
 void SocketHandler::run(){
 	io_context_.run();
@@ -22,14 +23,14 @@ void SocketHandler::closeListenServer(){
 void SocketHandler::establishConnection(asio::ip::address ip_address,int port){
 }
 
-
 void SocketHandler::acceptConnection(){
 	auto new_socket = std::make_shared<tcp::socket>(io_context_);
 	acceptor_.async_accept(*new_socket, [this, new_socket](std::error_code ec){
 		if(!ec){
-			Connection newConnection;
-			newConnection.socket = new_socket;
+			auto newConnection = std::make_unique<Connection>();
+			newConnection->socket = new_socket;
 			connection_Map_.emplace(next_conn_id_, std::move(newConnection));
+			readData(*connection_Map_[next_conn_id_]); // starts async chain of events
 			next_conn_id_++;
 		}
 		acceptConnection();
@@ -95,3 +96,11 @@ void SocketHandler::readBody(Connection& currentConnection, size_t data_length){
 		}
 	});
 }
+SocketHandler::SocketHandler()
+    : io_context_(),
+      acceptor_(io_context_),
+      socket_(io_context_)
+{
+	std::cout << "Creating socket handler" << std::endl;
+}
+

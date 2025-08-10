@@ -3,7 +3,8 @@
 
 class CommandParser{
 
-public: 
+public:
+	CommandParser();
 	Command jsonToCommand(nlohmann::json &input);
 	nlohmann::json textToJson(std::string input);
 	std::string serializeCommand(const Command& cmd);

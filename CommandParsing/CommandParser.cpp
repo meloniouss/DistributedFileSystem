@@ -1,7 +1,9 @@
 #include "CommandParser.hpp"
 #include <sstream>
+#include <iostream>
 // stubs
 
+CommandParser::CommandParser(){std::cout << "Creating command parser" << std::endl;}
 nlohmann::json CommandParser::textToJson(std::string input){
 	//make to lowercase?
     std::istringstream iss(input);
@@ -41,7 +43,7 @@ Command CommandParser::jsonToCommand(nlohmann::json &input){
 	returnCmd.cmdType = parseCommandType(input["cmdType"]);
 	input.erase("cmdType");
 	returnCmd.parameters = std::move(input);
-	returnCmd.senderAddress = ""; //set global vars for this
+	returnCmd.senderAddress = std::string(""); //set global vars for this
 	returnCmd.senderPort = std::nullopt;
 	returnCmd.senderType = std::nullopt;
 	return returnCmd;
