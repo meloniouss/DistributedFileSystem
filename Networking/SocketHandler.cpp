@@ -21,6 +21,7 @@ void SocketHandler::closeListenServer(){
 }
 
 void SocketHandler::establishConnection(asio::ip::address ip_address,int port){
+	//used for connecting to metadata node (it's the central node), need to implement
 }
 
 void SocketHandler::acceptConnection(){
@@ -33,13 +34,13 @@ void SocketHandler::acceptConnection(){
 			readData(*connection_Map_[next_conn_id_]); // starts async chain of events
 			next_conn_id_++;
 		}
-		acceptConnection();
+		acceptConnection(); // async_accept only handles one connection at a time, so we call acceptConnection() again to re-register the callback for the next incoming connection.
 	});
 }
 
-//transforms command json string into length-prefixed data to be sent
 void SocketHandler::enqueueOutgoingMessage(Connection& conn, std::string& msg){
 	std::lock_guard<std::mutex> lock(conn.mtx);
+	//transforms command json string into length-prefixed data to be sent
 	std::ostringstream cleaned_data; cleaned_data << msg.size() << "\r" << msg;
 	std::string to_send = cleaned_data.str();
 	conn.send_queue.push(to_send);
@@ -49,16 +50,33 @@ void SocketHandler::enqueueOutgoingMessage(Connection& conn, std::string& msg){
 }
 
 void SocketHandler::doAsyncWrite(Connection& conn){
-	//don't forget error handling (what happens if queue is empty?)
-	//DON'T FORGET --> USE LOCK_GUARD && MUTEX WHEN MODIFYING STATE SUCH AS CHANGING "WRITE_IN_PROGRESS"
-	//pop from queue, async::write what is inside the queue.
+	std::string data;
+	{std::lock_guard<std::mutex> lock(conn.mtx);
+	// check if queue is empty if it is then write false, return else pop from queue and do write
+	if(conn.send_queue.empty()){
+		conn.write_in_progress = false;
+		return;
+	}
+	data = conn.send_queue.front();
+	conn.send_queue.pop();
+	}
+
+	asio::async_write(*conn.socket, asio::buffer(data),[this, &conn](std::error_code ec, size_t bytes_transfered){
+		if(!ec){
+			doAsyncWrite(conn);
+		}
+		else{
+			conn.write_in_progress = true;
+		}
+	});
 }
 
 void SocketHandler::readData(Connection& currentConnection){
-	readHeader(currentConnection);
+	readHeader(currentConnection); //kinda useless method but it looks cleaner ig
 }
 
-// network messages are length-prefixed
+// network messages are length-prefixed (for now... seems kind of pointless for fixed-size chunks but whatever)
+// gotta add protobuf or some other file format support (HDF5, Parquet, maybe fucking CSV)
 void SocketHandler::readHeader(Connection& currentConnection){
 	asio::async_read_until(*currentConnection.socket, currentConnection.read_buffer, "\r", [this, &currentConnection](std::error_code ec, size_t bytes_transferred){
 		size_t data_length = 0;
@@ -88,7 +106,6 @@ void SocketHandler::readBody(Connection& currentConnection, size_t data_length){
 			body_stream.read(&message_body[0], data_length);
 			currentConnection.read_buffer.consume(data_length);
 			global_message_queue_.push(message_body);
-			// -> taskfactory thread will pop from queue, deserialize, jsonToCommand, then task factory will generate task and add to task queue.
 			readData(currentConnection);
 		}
 		else{
@@ -96,7 +113,7 @@ void SocketHandler::readBody(Connection& currentConnection, size_t data_length){
 		}
 	});
 }
-SocketHandler::SocketHandler()
+SocketHandler::SocketHandler() // don't fucking touch this
     : io_context_(),
       acceptor_(io_context_),
       socket_(io_context_)

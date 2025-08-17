@@ -30,6 +30,12 @@ public:
 		std::lock_guard<std::mutex> lock(mtx);
 		return q.empty();
 	}
+
+	T front(){
+		std::lock_guard<std::mutex> lock(mtx);
+		return q.front();
+	}
+
 private:
 	std::queue<T> q;
 	std::condition_variable cv;
