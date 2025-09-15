@@ -12,14 +12,15 @@ enum class CommandType {
 	DELETE_CHUNK,
 	REPLICATE_CHUNK,
 	UNKNOWN,
-	HEARTBEAT, 
+	HEARTBEAT,
+	ECHO
 };
 
 struct Command {
 	CommandType cmdType;
 	std::optional<std::string> senderType; //node
 	std::optional<std::string> senderAddress; //ip
-	std::optional<int> senderPort;
+	std::optional<int> senderPort; //replace this with NodeIdentity
 	nlohmann::json parameters;
 };
 

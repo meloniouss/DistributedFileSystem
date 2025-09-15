@@ -12,21 +12,26 @@ public:
 	void start(int port);
 	void stop();
 	MetadataNode();
+	
 	void consumeMessage();
 	void consumeTask();
 	std::condition_variable canConsumeMessage;
 	std::condition_variable canConsumeTask;
 	std::mutex messageConsumeLock;
 	std::mutex taskConsumeLock;
-	std::unordered_map<int, std::unique_ptr<SocketHandler::Connection>> connection_map; // make threadsafe, use mutex
-	ThreadSafeQueue<Command> messageQueue;
-	ThreadSafeQueue<Task> taskQueue;
+
+	std::unordered_map<std::string, int> nodeIdToConnId;
+
+	ThreadSafeQueue<std::unique_ptr<Command>> messageQueue;
+	ThreadSafeQueue<std::unique_ptr<Task>> taskQueue;
+	
 	std::thread messageConsumer;
 	std::thread taskConsumer;
 	std::thread ioThread;
+	
 	Logger Debug;
 private:
-	SocketHandler _socketHandler;
-	CommandParser _commandParser;
+	SocketHandler socketHandler;
+	CommandParser commandParser;
 	std::atomic_bool running;
 };

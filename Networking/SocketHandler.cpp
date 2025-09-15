@@ -30,6 +30,7 @@ void SocketHandler::acceptConnection(){
 		if(!ec){
 			auto newConnection = std::make_unique<Connection>();
 			newConnection->socket = new_socket;
+			newConnection->connId = next_conn_id_;
 			connection_Map_.emplace(next_conn_id_, std::move(newConnection));
 			readData(*connection_Map_[next_conn_id_]); // starts async chain of events
 			next_conn_id_++;
@@ -105,7 +106,10 @@ void SocketHandler::readBody(Connection& currentConnection, size_t data_length){
 			std::string message_body(data_length, '\0');
 			body_stream.read(&message_body[0], data_length);
 			currentConnection.read_buffer.consume(data_length);
-			global_message_queue_.push(message_body);
+			ReceivedMessage rmsg;
+			rmsg.data = message_body;
+			rmsg.connId = currentConnection.connId;
+			global_message_queue_.push(rmsg);
 			readData(currentConnection);
 		}
 		else{

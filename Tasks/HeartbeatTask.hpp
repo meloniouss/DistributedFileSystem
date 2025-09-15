@@ -3,7 +3,7 @@
 #include "Task.hpp"
 class HeartbeatTask : public Task {
 public:
-	HeartbeatTask(SocketHandler& socketHandler, SocketHandler::Connection& connection);
+  sfHeartbeatTask(SocketHandler& socketHandler, SocketHandler::Connection& connection);
 	void execute() override;
 private:
     SocketHandler& socketHandler_;
